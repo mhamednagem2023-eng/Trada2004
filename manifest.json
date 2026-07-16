@@ -1,0 +1,13 @@
+{
+  "short_name": "Trada",
+  "name": "Trada Decentralized Platform",
+  "icons": [
+    {
+      "src": "Logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./",
+  "display": "standalone"
+}
