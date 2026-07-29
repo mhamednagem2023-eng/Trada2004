@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Trada Network | Decentralized Base Matrix</title>
+    <link rel="icon" type="image/png" href="favicon.png" sizes="512x512">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        :root {
+            --bg-main: #080b0e;
+            --bg-card: #11171e;
+            --border-color: #1e2630;
+            --text-primary: #ffffff;
+            --text-secondary: #848e9c;
+            --accent-green: #02c076;
+            --accent-green-glow: rgba(2, 192, 118, 0.15);
+            --accent-red: #f84960;
+            --accent-blue: #0052ff;
+            --premium-gradient: linear-gradient(135deg, #11171e 0%, #0d131a 100%);
+            --base-blue: #0052ff;
+        }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', 'Cairo', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            overflow-x: hidden !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+            position: relative;
+        }
+        body { padding-bottom: 80px; background-image: radial-gradient(circle at top right, rgba(0, 82, 255, 0.03), transparent 400px); }
+        header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 14px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        .logo-box { display: flex; align-items: center; gap: 8px; }
+        .logo-box i { color: var(--base-blue); font-size: 22px; filter: drop-shadow(0 0 8px rgba(0, 82, 255, 0.4)); }
+        .logo-box span { font-weight: 800; font-size: 20px; letter-spacing: 0.8px; background: linear-gradient(to right, #fff, var(--text-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .header-actions { display: flex; align-items: center; gap: 10px; }
+        
+        .lang-dropdown-wrapper { position: relative; }
+        .lang-circle-btn {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 10px;
+            height: 38px;
+            border-radius: 19px;
+            font-size: 11px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .lang-circle-btn:hover { border-color: var(--accent-blue); box-shadow: 0 0 10px rgba(0, 82, 255, 0.3); }
+        .lang-dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 45px;
+            right: 0;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            width: 210px;
+            max-height: 280px;
+            overflow-y: auto;
+            z-index: 2000;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            padding: 6px;
+        }
+        .lang-dropdown-menu.show { display: block; }
+        .lang-option-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+            background: transparent;
+            border: none;
+            width: 100%;
+            text-align: start;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .lang-option-item:hover { background: rgba(0, 82, 255, 0.15); color: #fff; }
+        .lang-option-item span.flag { font-size: 14px; }
+
+        .btn-action-nav {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+        .btn-action-nav:hover { border-color: var(--base-blue); }
+        .btn-action-nav.connected-wallet {
+            border-color: var(--accent-green);
+            color: var(--accent-green);
+            background: rgba(2, 192, 118, 0.1);
+            box-shadow: 0 0 12px rgba(2, 192, 118, 0.2);
+        }
+        
+        .page-section { display: none; padding: 16px; max-width: 1200px; margin: 0 auto; width: 100%; }
+        .page-section.active { display: block; }
+
+        .card-panel {
+            background: var(--premium-gradient);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 18px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            width: 100%;
+        }
+
+        .nav-bar-footer {
+            position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--bg-card);
+            border-top: 1px solid var(--border-color); display: flex; height: 65px; z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+        }
+        .tab-btn {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-secondary); cursor: pointer; gap: 3px; transition: all 0.2s ease;
+        }
+        .tab-btn i { font-size: 18px; }
+        .tab-btn span { font-size: 10px; font-weight: 600; text-align: center; }
+        .tab-btn.active { color: var(--accent-green); filter: drop-shadow(0 0 4px rgba(2, 192, 118, 0.2)); }
+        
+        .wallet-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.85); z-index: 100000; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .wallet-modal { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; width: 100%; max-width: 340px; padding: 20px; text-align: center; }
+        .wallet-icon-animation { width: 60px; height: 60px; margin: 0 auto 15px; border: 3px solid var(--accent-blue); border-top-color: transparent; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .modal-title { font-size: 16px; font-weight: bold; color: #fff; margin-bottom: 8px; }
+        .modal-desc { font-size: 12px; color: var(--text-secondary); margin-bottom: 20px; line-height: 1.6; }
+        .modal-actions { display: flex; gap: 10px; }
+        .modal-btn { flex: 1; padding: 10px; border-radius: 6px; border: none; font-weight: bold; font-size: 13px; cursor: pointer; }
+        .btn-confirm { background: var(--accent-blue); color: white; }
+        .btn-cancel { background: #313a53; color: var(--text-primary); }
+
+        .section-loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 0;
+            gap: 10px;
+        }
+        .mini-spinner {
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(0, 82, 255, 0.15);
+            border-top: 3px solid var(--accent-blue);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        #ui-status-notifier {
+            display: none; padding: 12px; border-radius: 10px; font-size: 13px; 
+            margin-bottom: 14px; text-align: center; font-weight: 600;
+        }
+        .status-error { background: rgba(248, 73, 96, 0.15); border: 1px solid var(--accent-red); color: #ff6b7e; }
+        .status-success { background: rgba(2, 192, 118, 0.15); border: 1px solid var(--accent-green); color: #63ffc4; }
+
+        .goog-te-banner-frame, .goog-te-gadget { display: none !important; }
+        body { top: 0px !important; position: static !important; }
+        .skiptranslate { display: none !important; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-box">
+            <i class="fa-solid fa-cubes"></i>
+            <span>TRADA</span>
+        </div>
+        <div class="header-actions">
+            <div class="lang-dropdown-wrapper">
+                <button class="lang-circle-btn" onclick="toggleLangMenu()">
+                    <span id="current-flag">🇺🇸</span>
+                    <span id="current-lang-code">EN</span>
+                    <i class="fa-solid fa-chevron-down" style="font-size: 9px; margin-left: 2px;"></i>
+                </button>
+                <div class="lang-dropdown-menu" id="langDropdownMenu"></div>
+            </div>
+            
+            <button class="btn-action-nav" id="btn-wallet-connect" onclick="handleWalletConnectionTrigger()">
+                <i class="fa-solid fa-wallet"></i> <span id="wallet-btn-text">Connect Wallet</span>
+            </button>
+        </div>
+    </header>
+
+    <div style="max-width:480px; margin: 12px auto 0 auto; padding: 0 16px;">
+        <div id="ui-status-notifier"></div>
+    </div>
+
+    <!-- الأقسام الخمسة الرئيسية -->
+    <section class="page-section active" id="section-1"></section>
+    <section class="page-section" id="section-2"></section>
+    <section class="page-section" id="section-3"></section>
+    <section class="page-section" id="section-4"></section>
+    <section class="page-section" id="section-5"></section>
+
+    <!-- شريط التنقل السفلي -->
+    <nav class="nav-bar-footer">
+        <div class="tab-btn active" id="nav-item-1" onclick="switchTab(1, 'index1.html')">
+            <i class="fa-solid fa-house"></i>
+            <span data-key="nav_home">الرئيسية</span>
+        </div>
+        <div class="tab-btn" id="nav-item-2" onclick="switchTab(2, 'index2.html')">
+            <i class="fa-solid fa-vault"></i>
+            <span data-key="nav_invest">الاستثمار</span>
+        </div>
+        <div class="tab-btn" id="nav-item-3" onclick="switchTab(3, 'index3.html')">
+            <i class="fa-solid fa-chart-line"></i>
+            <span data-key="nav_trade">التداول</span>
+        </div>
+        <div class="tab-btn" id="nav-item-4" onclick="switchTab(4, 'index4.html')">
+            <i class="fa-solid fa-users"></i>
+            <span data-key="nav_matrix">الأجيال</span>
+        </div>
+        <div class="tab-btn" id="nav-item-5" onclick="switchTab(5, 'index5.html')">
+            <i class="fa-solid fa-landmark"></i>
+            <span data-key="nav_dao">DAO Org</span>
+        </div>
+    </nav>
+
+    <!-- نافذة تأكيد التوقيع أو قطع الاتصال -->
+    <div class="wallet-modal-overlay" id="wallet-signer-modal">
+        <div class="wallet-modal">
+            <div class="wallet-icon-animation" id="modal-spinner-icon"></div>
+            <div class="modal-title" id="wallet-modal-title" data-key="modal_connect_title">Smart Contract Signature Required</div>
+            <div class="modal-desc" id="wallet-modal-desc" data-key="modal_connect_desc">Please confirm the signature request to execute the programmatic transaction via the Web3 network.</div>
+            <div class="modal-actions" id="wallet-modal-actions">
+                <button class="modal-btn btn-cancel" onclick="closeWalletModal()" data-key="btn_cancel">Cancel</button>
+                <button class="modal-btn btn-confirm" onclick="executeWalletAction()" data-key="btn_confirm">Sign & Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="google_translate_element" style="display:none;"></div>
+
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',
+                autoDisplay: false
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    <script>
+        // قاموس محلي أساسي يغطي أهم اللغات والرسائل لضمان عمل الواجهة بشكل مثالي
+        const localDictionary = {
+            en: {
+                connect_wallet: "Connect Wallet",
+                nav_home: "Home",
+                nav_invest: "Investment",
+                nav_trade: "Trading",
+                nav_matrix: "Matrix",
+                nav_dao: "DAO Org",
+                modal_connect_title: "Connecting to Web3 Wallet",
+                modal_connect_desc: "Please approve the connection request inside your Web3 application.",
+                btn_cancel: "Cancel",
+                btn_confirm: "Sign & Confirm",
+                wallet_success: "Wallet connected successfully via Web3.",
+                wallet_disconnect_success: "Wallet disconnected successfully.",
+                wallet_error: "Failed to connect wallet, please try again.",
+                web3_required: "Web3 Browser Required",
+                web3_required_desc: "Please open this platform inside a Web3-enabled browser (such as MetaMask or Trust Wallet DApp browser)."
+            },
+            ar: {
+                connect_wallet: "ربط المحفظة",
+                nav_home: "الرئيسية",
+                nav_invest: "الاستثمار",
+                nav_trade: "التداول",
+                nav_matrix: "الأجيال",
+                nav_dao: "DAO Org",
+                modal_connect_title: "جاري الاتصال بمحفظة Web3",
+                modal_connect_desc: "يرجى تأكيد طلب الاتصال داخل تطبيق الـ Web3 الخاص بك.",
+                btn_cancel: "إلغاء",
+                btn_confirm: "توقيع وتأكيد",
+                wallet_success: "تم ربط المحفظة بنجاح عبر متصفح Web3.",
+                wallet_disconnect_success: "تم قطع اتصال المحفظة بنجاح.",
+                wallet_error: "فشل ربط المحفظة، يرجى المحاولة مجدداً.",
+                web3_required: "يتطلب متصفح Web3",
+                web3_required_desc: "يرجى فتح هذه المنصة داخل متصفح يدعم Web3 (مثل MetaMask أو متصفح Trust Wallet)."
+            },
+            es: {
+                connect_wallet: "Conectar Billetera",
+                nav_home: "Inicio",
+                nav_invest: "Inversión",
+                nav_trade: "Trading",
+                nav_matrix: "Matriz",
+                nav_dao: "DAO Org",
+                modal_connect_title: "Conectando a Billetera Web3",
+                modal_connect_desc: "Por favor apruebe la solicitud de conexión dentro de su aplicación Web3.",
+                btn_cancel: "Cancelar",
+                btn_confirm: "Firmar y Confirmar",
+                wallet_success: "Billetera conectada exitosamente.",
+                wallet_disconnect_success: "Billetera desconectada exitosamente.",
+                wallet_error: "Error al conectar la billetera, inténtelo de nuevo.",
+                web3_required: "Navegador Web3 Requerido",
+                web3_required_desc: "Por favor abra esta plataforma dentro de un navegador habilitado para Web3."
+            },
+            tr: {
+                connect_wallet: "Cüzdanı Bağla",
+                nav_home: "Ana Sayfa",
+                nav_invest: "Yatırım",
+                nav_trade: "İşlem",
+                nav_matrix: "Matris",
+                nav_dao: "DAO Org",
+                modal_connect_title: "Web3 Cüzdanına Bağlanıyor",
+                modal_connect_desc: "Lütfen Web3 uygulamanız içindeki bağlantı isteğini onaylayın.",
+                btn_cancel: "İptal",
+                btn_confirm: "İmzala ve Onayla",
+                wallet_success: "Cüzdan başarıyla bağlandı.",
+                wallet_disconnect_success: "Cüzdan bağlantısı kesildi.",
+                wallet_error: "Cüzdan bağlanamadı, lütfen tekrar deneyin.",
+                web3_required: "Web3 Tarayıcısı Gerekli",
+                web3_required_desc: "Lütfen bu platformu Web3 destekli bir tarayıcıda açın."
+            }
+        };
+
+        const countriesList = [
+            { code: 'en', name: 'English (US)', flag: '🇺🇸' },
+            { code: 'ar', name: 'العربية', flag: '🇸🇦' },
+            { code: 'es', name: 'Español', flag: '🇪🇸' },
+            { code: 'tr', name: 'Türkçe', flag: '🇹🇷' },
+            { code: 'fr', name: 'Français', flag: '🇫🇷' },
+            { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+            { code: 'zh-CN', name: '中文 (Chinese)', flag: '🇨🇳' },
+            { code: 'ja', name: '日本語 (Japanese)', flag: '🇯🇵' },
+            { code: 'ru', name: 'Русский', flag: '🇷🇺' },
+            { code: 'fa', name: 'فارسی', flag: '🇮🇷' }
+        ];
+
+        let currentActiveLang = 'en';
+        let connectedWalletAddress = null;
+        let lastNotifMessage = { en: "", ar: "", type: "success" };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            buildLangDropdown();
+            loadInternalFile(1, 'index1.html');
+        });
+
+        function buildLangDropdown() {
+            const menu = document.getElementById('langDropdownMenu');
+            if (!menu) return;
+            menu.innerHTML = '';
+            countriesList.forEach(item => {
+                const btn = document.createElement('button');
+                btn.className = 'lang-option-item';
+                btn.innerHTML = `<span class="flag">${item.flag}</span> <span>${item.name}</span>`;
+                btn.onclick = () => changeLanguage(item.code, item.flag);
+                menu.appendChild(btn);
+            });
+        }
+
+        function toggleLangMenu() {
+            const menu = document.getElementById('langDropdownMenu');
+            if (menu) menu.classList.toggle('show');
+        }
+
+        // دالة تغيير اللغة التي تجمع بين القاموس المحلي المضمون ومحرك جوجل للترجمة الاحتياطية
+        function changeLanguage(langCode, flagEmoji) {
+            currentActiveLang = langCode;
+            document.getElementById('current-flag').innerText = flagEmoji;
+            document.getElementById('current-lang-code').innerText = langCode.toUpperCase();
+            toggleLangMenu();
+
+            // ضبط اتجاه الواجهة
+            const rootHtml = document.getElementById('html-root');
+            if (['ar', 'fa', 'he', 'ur'].includes(langCode)) {
+                rootHtml.setAttribute('dir', 'rtl');
+            } else {
+                rootHtml.setAttribute('dir', 'ltr');
+            }
+
+            // تطبيق القاموس المحلي فوراً
+            applyLocalDictionary(langCode);
+
+            // تفعيل محرك جوجل للترجمة لدعم باقي النصوص
+            const googleCombo = document.querySelector('.goog-te-combo');
+            if (googleCombo) {
+                googleCombo.value = langCode;
+                googleCombo.dispatchEvent(new Event('change'));
+            }
+        }
+
+        function applyLocalDictionary(lang) {
+            const dict = localDictionary[lang] || localDictionary['en'];
+            
+            // تحديث عناصر الواجهة التي تحمل الوسم data-key
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (dict[key]) {
+                    el.innerText = dict[key];
+                }
+            });
+
+            // تحديث زر المحفظة بناءً على حالة الاتصال الحالية
+            const walletTextSpan = document.getElementById('wallet-btn-text');
+            if (!connectedWalletAddress) {
+                walletTextSpan.innerText = dict['connect_wallet'];
+            }
+
+            // تحديث رسالة التنبيه النشطة إذا كانت ظاهرة
+            const box = document.getElementById('ui-status-notifier');
+            if (box.style.display === 'block' && lastNotifMessage.en) {
+                box.innerText = dict[lastNotifMessage.key] || lastNotifMessage.en;
+            }
+        }
+
+        async function loadInternalFile(sectionIndex, fileName) {
+            const sectionContainer = document.getElementById(`section-${sectionIndex}`);
+            
+            sectionContainer.innerHTML = `
+                <div class="section-loader">
+                    <div class="mini-spinner"></div>
+                    <p style="font-size:12px; color:var(--text-secondary);">جاري جلب محتوى ${fileName}...</p>
+                </div>
+            `;
+
+            try {
+                const response = await fetch(fileName);
+                if (response.ok) {
+                    const htmlContent = await response.text();
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(htmlContent, 'text/html');
+                    const bodyContent = doc.body ? doc.body.innerHTML : htmlContent;
+                    sectionContainer.innerHTML = bodyContent;
+                } else {
+                    sectionContainer.innerHTML = `
+                        <div class="card-panel" style="text-align: center; padding: 30px;">
+                            <i class="fa-solid fa-file-circle-exclamation" style="font-size: 32px; color: var(--accent-blue); margin-bottom: 10px;"></i>
+                            <p style="font-size: 13px; color: var(--text-secondary);">يرجى رفع ملف <b>${fileName}</b> إلى المستودع ليتم عرضه هنا تلقائياً.</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                sectionContainer.innerHTML = `
+                    <div class="card-panel" style="text-align: center; padding: 30px;">
+                        <p style="font-size: 13px; color: var(--text-secondary);">في انتظار رفع ملف <b>${fileName}</b> للمستودع...</p>
+                    </div>
+                `;
+            }
+        }
+
+        function switchTab(tabIndex, fileName) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+
+            const targetSec = document.getElementById(`section-${tabIndex}`);
+            if (targetSec) targetSec.classList.add('active');
+
+            const targetNav = document.getElementById(`nav-item-${tabIndex}`);
+            if (targetNav) targetNav.classList.add('active');
+
+            loadInternalFile(tabIndex, fileName);
+        }
+
+        async function handleWalletConnectionTrigger() {
+            const dict = localDictionary[currentActiveLang] || localDictionary['en'];
+            if (connectedWalletAddress) {
+                showDisconnectModal();
+            } else {
+                if (window.ethereum) {
+                    try {
+                        showConnectingModal();
+                        const provider = new ethers.providers.Web3Provider(window.ethereum);
+                        await provider.send("eth_requestAccounts", []);
+                        const signer = provider.getSigner();
+                        const address = await signer.getAddress();
+                        
+                        connectedWalletAddress = address;
+                        updateWalletUIConnected(address);
+                        closeWalletModal();
+                    } catch (error) {
+                        closeWalletModal();
+                        showNotification('wallet_error', "error");
+                    }
+                } else {
+                    showWeb3FallbackModal();
+                }
+            }
+        }
+
+        function showConnectingModal() {
+            const dict = localDictionary[currentActiveLang] || localDictionary['en'];
+            const modal = document.getElementById('wallet-signer-modal');
+            document.getElementById('modal-spinner-icon').style.display = 'block';
+            document.getElementById('wallet-modal-title').innerText = dict['modal_connect_title'];
+            document.getElementById('wallet-modal-desc').innerText = dict['modal_connect_desc'];
+            document.getElementById('wallet-modal-actions').style.display = 'none';
+            modal.style.display = 'flex';
+        }
+
+        function showDisconnectModal() {
+            const modal = document.getElementById('wallet-signer-modal');
+            document.getElementById('modal-spinner-icon').style.display = 'none';
+            document.getElementById('wallet-modal-title').innerText = "Disconnect Wallet";
+            document.getElementById('wallet-modal-desc').innerText = `Connected: ${connectedWalletAddress.substring(0,6)}...${connectedWalletAddress.substring(38)}\nDo you want to disconnect your wallet?`;
+            document.getElementById('wallet-modal-actions').style.display = 'flex';
+            
+            const confirmBtn = document.querySelector('.btn-confirm');
+            confirmBtn.innerText = "Disconnect";
+            confirmBtn.onclick = performWalletDisconnection;
+            modal.style.display = 'flex';
+        }
+
+        function showWeb3FallbackModal() {
+            const dict = localDictionary[currentActiveLang] || localDictionary['en'];
+            const modal = document.getElementById('wallet-signer-modal');
+            document.getElementById('modal-spinner-icon').style.display = 'none';
+            document.getElementById('wallet-modal-title').innerText = dict['web3_required'];
+            document.getElementById('wallet-modal-desc').innerText = dict['web3_required_desc'];
+            document.getElementById('wallet-modal-actions').style.display = 'flex';
+            document.querySelector('.btn-confirm').innerText = "OK";
+            document.querySelector('.btn-confirm').onclick = closeWalletModal;
+            modal.style.display = 'flex';
+        }
+
+        function performWalletDisconnection() {
+            connectedWalletAddress = null;
+            const btn = document.getElementById('btn-wallet-connect');
+            btn.classList.remove('connected-wallet');
+            const dict = localDictionary[currentActiveLang] || localDictionary['en'];
+            document.getElementById('wallet-btn-text').innerText = dict['connect_wallet'];
+            closeWalletModal();
+            showNotification('wallet_disconnect_success', "success");
+        }
+
+        function updateWalletUIConnected(address) {
+            const btn = document.getElementById('btn-wallet-connect');
+            btn.classList.add('connected-wallet');
+            const shortAddr = address.substring(0, 4) + '...' + address.substring(address.length - 4);
+            document.getElementById('wallet-btn-text').innerText = shortAddr;
+            showNotification('wallet_success', "success");
+        }
+
+        function closeWalletModal() {
+            document.getElementById('wallet-signer-modal').style.display = 'none';
+            const dict = localDictionary[currentActiveLang] || localDictionary['en'];
+            const confirmBtn = document.querySelector('.btn-confirm');
+            confirmBtn.innerText = dict['btn_confirm'] || "Sign & Confirm";
+            confirmBtn.onclick = executeWalletAction;
+        }
+
+        function executeWalletAction() {
+            closeWalletModal();
+        }
+
+        function showNotification(dictKey, type) {
+            const dict = localDictionary[currentActiveLang] || localDictionary['en'];
+            const box = document.getElementById('ui-status-notifier');
+            lastNotifMessage = { key: dictKey, en: dict[dictKey], type: type };
+            box.innerText = dict[dictKey] || dictKey;
+            box.className = type === 'error' ? 'status-error' : 'status-success';
+            box.style.display = 'block';
+            setTimeout(() => {
+                box.style.display = 'none';
+            }, 4000);
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.closest('.lang-dropdown-wrapper')) {
+                const menu = document.getElementById('langDropdownMenu');
+                if (menu && menu.classList.contains('show')) {
+                    menu.classList.remove('show');
+                }
+            }
+        }
+    </script>
+</body>
+</html>
