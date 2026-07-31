@@ -1,0 +1,15 @@
+{
+  "short_name": "Exchange",
+  "name": "Web3 Exchange Platform",
+  "icons": [
+    {
+      "src": "logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#0b0e11",
+  "theme_color": "#f0b90b",
+  "display": "standalone"
+}
