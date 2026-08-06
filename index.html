@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mera X - Trading & Investment Platform</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ethers.js v5 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        body { background-color: #060913; color: #f3f4f6; font-family: system-ui, sans-serif; }
+        .glass-card { background: rgba(13, 18, 36, 0.75); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .btn-gradient { background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); }
+        .btn-gradient:hover { opacity: 0.92; }
+        .active-tab { border-bottom: 2px solid #3b82f6; color: #3b82f6; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Header Navigation -->
+    <nav class="glass-card sticky top-0 z-50 px-4 md:px-8 py-3.5 flex justify-between items-center border-b border-gray-800">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl btn-gradient flex items-center justify-center font-black text-xl text-white shadow-lg shadow-blue-500/20">
+                X
+            </div>
+            <span class="text-xl font-extrabold tracking-wider text-white">MERA <span class="text-blue-500">DAPP</span></span>
+        </div>
+
+        <!-- AppKit Native Button + Custom Trigger -->
+        <div class="flex items-center gap-2">
+            <w3m-button balance="show" size="sm"></w3m-button>
+            <button onclick="connectAndSign()" class="btn-gradient text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg transition">
+                ربط المحفظة
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+
+        <!-- Navigation Tabs -->
+        <div class="flex gap-8 border-b border-gray-800 text-sm font-bold text-gray-400">
+            <button id="tabTradingBtn" onclick="switchTab('trading')" class="pb-3 active-tab transition">قسم التداول (Swap)</button>
+            <button id="tabInvestBtn" onclick="switchTab('investment')" class="pb-3 transition">قسم الاستثمار (Staking)</button>
+        </div>
+
+        <!-- Status Output Box -->
+        <div id="statusBox" class="hidden text-xs p-4 rounded-xl bg-gray-950 border border-gray-800 text-gray-300 break-all text-right"></div>
+
+        <!-- 1. TRADING SECTION -->
+        <div id="tradingSection" class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Live Chart -->
+            <div class="lg:col-span-2 glass-card p-4 rounded-2xl flex flex-col min-h-[420px]">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-base font-bold text-white">مخطط التداول الحي (BTC/USDT)</h2>
+                    <span class="text-xs bg-emerald-500/10 text-emerald-400 px-2.5 py-1 rounded-full border border-emerald-500/20">Live Market</span>
+                </div>
+                <div class="flex-1 w-full rounded-xl overflow-hidden bg-gray-950 border border-gray-800">
+                    <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_1&symbol=BINANCE%3ABTCUSDT&interval=60&hidesidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=0a0f1d&theme=dark&style=1&timezone=Etc%2FUTC" class="w-full h-full min-h-[350px] border-0"></iframe>
+                </div>
+            </div>
+
+            <!-- Swap Box -->
+            <div class="glass-card p-6 rounded-2xl flex flex-col justify-between space-y-4">
+                <h3 class="font-bold text-white border-b border-gray-800 pb-3">تبادل سريع (Swap)</h3>
+                
+                <div class="bg-gray-950 p-3.5 rounded-xl border border-gray-800 space-y-1">
+                    <div class="flex justify-between text-xs text-gray-400"><span>تدفع</span><span id="userBalance">0.00 USDT</span></div>
+                    <input type="number" placeholder="0.0" class="bg-transparent text-lg font-bold text-white outline-none w-full">
+                </div>
+
+                <div class="text-center text-blue-400 font-bold">↓</div>
+
+                <div class="bg-gray-950 p-3.5 rounded-xl border border-gray-800 space-y-1">
+                    <div class="flex justify-between text-xs text-gray-400"><span>تستلم</span><span>MEC Token</span></div>
+                    <input type="number" placeholder="0.0" readonly class="bg-transparent text-lg font-bold text-white outline-none w-full">
+                </div>
+
+                <button onclick="connectAndSign()" class="w-full py-3.5 btn-gradient rounded-xl font-bold text-sm text-white shadow-lg">
+                    تنفيذ التداول
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. INVESTMENT SECTION -->
+        <div id="investmentSection" class="hidden grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- Plan 1 -->
+            <div class="glass-card p-6 rounded-2xl space-y-4 border-t-2 border-blue-500">
+                <span class="text-xs bg-blue-500/10 text-blue-400 px-3 py-1 rounded-full font-bold">الخطة الأساسية</span>
+                <h3 class="text-2xl font-black text-white">12% <span class="text-xs text-gray-400 font-normal">عائد سنوي (APY)</span></h3>
+                <p class="text-xs text-gray-400">مدة الاستثمار: 30 يوم | الحد الأدنى: 100 USDT</p>
+                <button onclick="connectAndSign()" class="w-full py-3 btn-gradient rounded-xl font-bold text-xs">استثمر الآن</button>
+            </div>
+
+            <!-- Plan 2 -->
+            <div class="glass-card p-6 rounded-2xl space-y-4 border-t-2 border-purple-500">
+                <span class="text-xs bg-purple-500/10 text-purple-400 px-3 py-1 rounded-full font-bold">الخطة المتقدمة</span>
+                <h3 class="text-2xl font-black text-white">25% <span class="text-xs text-gray-400 font-normal">عائد سنوي (APY)</span></h3>
+                <p class="text-xs text-gray-400">مدة الاستثمار: 90 يوم | الحد الأدنى: 500 USDT</p>
+                <button onclick="connectAndSign()" class="w-full py-3 btn-gradient rounded-xl font-bold text-xs">استثمر الآن</button>
+            </div>
+
+            <!-- Plan 3 -->
+            <div class="glass-card p-6 rounded-2xl space-y-4 border-t-2 border-emerald-500">
+                <span class="text-xs bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full font-bold">خطة VIP</span>
+                <h3 class="text-2xl font-black text-white">45% <span class="text-xs text-gray-400 font-normal">عائد سنوي (APY)</span></h3>
+                <p class="text-xs text-gray-400">مدة الاستثمار: 180 يوم | الحد الأدنى: 1000 USDT</p>
+                <button onclick="connectAndSign()" class="w-full py-3 btn-gradient rounded-xl font-bold text-xs">استثمر الآن</button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- AppKit Module Integration -->
+    <script type="module">
+        import { createAppKit } from 'https://unpkg.com/@reown/appkit@1.0.0/dist/appkit.js'
+        import { mainnet, bsc, polygon } from 'https://unpkg.com/@reown/appkit/networks'
+
+        const projectId = '1dbbf99e77d1e3675cbbb86b24792b5d';
+
+        const metadata = {
+            name: 'Mera X Platform',
+            description: 'Trading & Staking DApp',
+            url: window.location.origin,
+            icons: ['https://avatars.githubusercontent.com/u/37784886']
+        }
+
+        window.modal = createAppKit({
+            networks: [mainnet, bsc, polygon],
+            metadata: metadata,
+            projectId: projectId,
+            features: { analytics: true }
+        });
+    </script>
+
+    <!-- Main JS logic -->
+    <script>
+        function switchTab(tab) {
+            const tradingSec = document.getElementById('tradingSection');
+            const investSec = document.getElementById('investmentSection');
+            const tradingBtn = document.getElementById('tabTradingBtn');
+            const investBtn = document.getElementById('tabInvestBtn');
+
+            if(tab === 'trading') {
+                tradingSec.classList.remove('hidden');
+                investSec.classList.add('hidden');
+                tradingBtn.classList.add('active-tab');
+                investBtn.classList.remove('active-tab');
+            } else {
+                tradingSec.classList.add('hidden');
+                investSec.classList.remove('hidden');
+                investBtn.classList.add('active-tab');
+                tradingBtn.classList.remove('active-tab');
+            }
+        }
+
+        async function connectAndSign() {
+            const statusBox = document.getElementById('statusBox');
+            statusBox.classList.remove('hidden');
+
+            // 1. إذا كان داخل متصفح المحفظة (In-App Browser)
+            if (window.ethereum) {
+                statusBox.innerHTML = '<span class="text-blue-400">جاري الربط مع المحفظة المدمجة...</span>';
+                try {
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const accounts = await provider.send("eth_requestAccounts", []);
+                    const userAddress = accounts[0];
+
+                    statusBox.innerHTML = `تم الربط: <b>${userAddress.substring(0,6)}...${userAddress.substring(userAddress.length-4)}</b><br><span class="text-amber-400">جاري طلب التوقيع لتأكيد العملية...</span>`;
+
+                    const signer = provider.getSigner();
+                    const message = `تأكيد عملية التداول/الاستثمار على منصة Mera X:\nAddress: ${userAddress}\nTimestamp: ${new Date().toISOString()}`;
+                    const signature = await signer.signMessage(message);
+
+                    statusBox.innerHTML = `
+                        <div class="text-emerald-400 font-bold mb-1">✓ تم الربط والتوقيع بنجاح!</div>
+                        <div><b>المحفظة:</b> ${userAddress}</div>
+                        <div><b>التوقيع:</b> ${signature.substring(0, 24)}...</div>
+                    `;
+
+                    const balance = await provider.getBalance(userAddress);
+                    document.getElementById('userBalance').innerText = parseFloat(ethers.utils.formatEther(balance)).toFixed(3) + ' ETH';
+
+                } catch (err) {
+                    statusBox.innerHTML = `<span class="text-rose-400">خطأ: ${err.message}</span>`;
+                }
+            } 
+            // 2. إذا كان متصفح خارجي -> فتح WalletConnect Modal
+            else {
+                statusBox.innerHTML = '<span class="text-purple-400">فتح نافذة WalletConnect للمحافظ الخارجية...</span>';
+                if (window.modal) {
+                    window.modal.open();
+                } else {
+                    alert("جاري تحميل مكتبة المحافظ...");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
