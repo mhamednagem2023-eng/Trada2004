@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mera X - Trading & Web3 Exchange</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ethers.js v5 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <style>
+        body {
+            background-color: #060913;
+            color: #f3f4f6;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        .glass-card {
+            background: rgba(13, 18, 36, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+        .btn-gradient:hover {
+            opacity: 0.92;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <!-- Navbar Header -->
+    <nav class="glass-card sticky top-0 z-50 px-4 md:px-8 py-3.5 flex justify-between items-center border-b border-gray-800">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl btn-gradient flex items-center justify-center font-black text-xl text-white shadow-lg shadow-blue-500/20">
+                X
+            </div>
+            <span class="text-xl font-extrabold tracking-wider text-white">MERA <span class="text-blue-500">EXCHANGE</span></span>
+        </div>
+
+        <!-- Ticker Price Bar -->
+        <div class="hidden md:flex items-center gap-6 text-xs text-gray-400">
+            <div>
+                <span class="block text-gray-500">BTC/USDT</span>
+                <span class="text-emerald-400 font-bold">$64,250.00</span>
+            </div>
+            <div>
+                <span class="block text-gray-500">ETH/USDT</span>
+                <span class="text-emerald-400 font-bold">$3,480.50</span>
+            </div>
+            <div>
+                <span class="block text-gray-500">MEC/USDT</span>
+                <span class="text-blue-400 font-bold">$1.25</span>
+            </div>
+        </div>
+
+        <!-- Wallet Connect Trigger -->
+        <div class="flex items-center gap-3">
+            <w3m-button balance="show" size="sm"></w3m-button>
+            <button onclick="connectAndSignDirectly()" class="btn-gradient text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg flex items-center gap-1.5">
+                ربط وتوقيع
+            </button>
+        </div>
+    </nav>
+
+    <!-- Main Trading Dashboard Grid -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        <!-- Chart Section (Left/Center 2 Columns) -->
+        <div class="lg:col-span-2 space-y-4 flex flex-col">
+            <div class="glass-card p-4 rounded-2xl flex-1 flex flex-col min-h-[400px]">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center gap-2">
+                        <h2 class="text-lg font-bold text-white">BTC / USDT</h2>
+                        <span class="text-xs bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded border border-emerald-500/20">تداول حي</span>
+                    </div>
+                    <div class="flex gap-2 text-xs text-gray-400">
+                        <button class="px-2.5 py-1 bg-gray-800 rounded text-white">1H</button>
+                        <button class="px-2.5 py-1 hover:bg-gray-800 rounded">4H</button>
+                        <button class="px-2.5 py-1 hover:bg-gray-800 rounded">1D</button>
+                    </div>
+                </div>
+
+                <!-- TradingView Embedded Chart -->
+                <div class="flex-1 w-full rounded-xl overflow-hidden bg-gray-950 border border-gray-800/80">
+                    <iframe src="https://s.tradingview.com/widgetembed/?frameElementId=tradingview_1&symbol=BINANCE%3ABTCUSDT&interval=60&hidesidetoolbar=1&symboledit=1&saveimage=1&toolbarbg=0a0f1d&theme=dark&style=1&timezone=Etc%2FUTC" 
+                            class="w-full h-full min-h-[350px] border-0"></iframe>
+                </div>
+            </div>
+
+            <!-- Quick Stats & Order Book Placeholder -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div class="glass-card p-3.5 rounded-xl">
+                    <span class="block text-[11px] text-gray-500">حجم التداول 24h</span>
+                    <span class="text-sm font-bold text-white">$1.2B</span>
+                </div>
+                <div class="glass-card p-3.5 rounded-xl">
+                    <span class="block text-[11px] text-gray-500">أعلى سعر 24h</span>
+                    <span class="text-sm font-bold text-emerald-400">$65,100</span>
+                </div>
+                <div class="glass-card p-3.5 rounded-xl">
+                    <span class="block text-[11px] text-gray-500">أدنى سعر 24h</span>
+                    <span class="text-sm font-bold text-rose-400">$63,800</span>
+                </div>
+                <div class="glass-card p-3.5 rounded-xl">
+                    <span class="block text-[11px] text-gray-500">رسوم الشبكة (Gas)</span>
+                    <span class="text-sm font-bold text-indigo-400">Low</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Trading Swap Form (Right Column) -->
+        <div class="glass-card p-6 rounded-2xl flex flex-col justify-between space-y-6">
+            <div class="space-y-5">
+                <div class="flex justify-between items-center border-b border-gray-800 pb-3">
+                    <h3 class="font-bold text-white text-base">تبادل العملات (Swap)</h3>
+                    <span class="text-xs text-gray-400">Web3 Router</span>
+                </div>
+
+                <!-- From Input -->
+                <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 space-y-2">
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>تدفع</span>
+                        <span>الرصيد: <span id="userBalanceText" class="text-gray-200">0.00</span></span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" placeholder="0.0" class="bg-transparent text-xl font-bold text-white outline-none w-full">
+                        <span class="bg-gray-800 text-xs px-3 py-1.5 rounded-lg font-semibold text-gray-200">USDT</span>
+                    </div>
+                </div>
+
+                <div class="flex justify-center">
+                    <div class="w-8 h-8 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-blue-400 font-bold text-sm">↓</div>
+                </div>
+
+                <!-- To Input -->
+                <div class="bg-gray-950 p-4 rounded-xl border border-gray-800 space-y-2">
+                    <div class="flex justify-between text-xs text-gray-400">
+                        <span>تستلم (تقريبي)</span>
+                        <span>Slippage: 0.5%</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <input type="number" placeholder="0.0" readonly class="bg-transparent text-xl font-bold text-white outline-none w-full">
+                        <span class="bg-gray-800 text-xs px-3 py-1.5 rounded-lg font-semibold text-gray-200">MEC</span>
+                    </div>
+                </div>
+
+                <!-- Status Output Box -->
+                <div id="statusBox" class="hidden text-xs p-3.5 rounded-xl bg-gray-950 border border-gray-800 text-gray-300 break-all text-right"></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-3">
+                <button onclick="connectAndSignDirectly()" class="w-full py-3.5 btn-gradient rounded-xl font-bold text-sm text-white shadow-lg">
+                    تداول الآن / ربط وتوقيع
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="glass-card border-t border-gray-800/80 py-4 px-6 text-center text-xs text-gray-500">
+        Mera X Trading Platform &copy; 2026 - جميع الحقوق محفوظة
+    </footer>
+
+    <!-- AppKit / WalletConnect Module Setup -->
+    <script type="module">
+        import { createAppKit } from 'https://unpkg.com/@reown/appkit@1.0.0/dist/appkit.js'
+        import { mainnet, bsc, polygon } from 'https://unpkg.com/@reown/appkit/networks'
+
+        // WalletConnect Project ID Registered
+        const projectId = '1dbbf99e77d1e3675cbbb86b24792b5d'; 
+
+        const metadata = {
+            name: 'Mera X Exchange',
+            description: 'Mera X Web3 Trading Platform',
+            url: window.location.origin,
+            icons: ['https://avatars.githubusercontent.com/u/37784886']
+        }
+
+        window.modal = createAppKit({
+            networks: [mainnet, bsc, polygon],
+            metadata: metadata,
+            projectId: projectId,
+            features: {
+                analytics: true
+            }
+        });
+    </script>
+
+    <!-- Web3 Handlers -->
+    <script>
+        async function connectAndSignDirectly() {
+            const statusBox = document.getElementById('statusBox');
+            statusBox.classList.remove('hidden');
+            statusBox.innerHTML = '<span class="text-blue-400">جاري الاتصال بالمحفظة...</span>';
+
+            try {
+                if (window.ethereum) {
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const accounts = await provider.send("eth_requestAccounts", []);
+                    const userAddress = accounts[0];
+
+                    statusBox.innerHTML = `تم الاتصال: <b class="text-white">${userAddress.substring(0,6)}...${userAddress.substring(userAddress.length - 4)}</b><br><span class="text-indigo-400">جاري طلب التوقيع للتداول...</span>`;
+
+                    const signer = provider.getSigner();
+                    const message = `تأكيد عملية التداول على منصة Mera X:\nAddress: ${userAddress}\nTimestamp: ${new Date().toISOString()}`;
+                    
+                    const signature = await signer.signMessage(message);
+
+                    statusBox.innerHTML = `
+                        <div class="text-emerald-400 font-bold mb-1">✓ تم الربط والتوقيع بنجاح!</div>
+                        <div><b>العنوان:</b> <span class="text-gray-300">${userAddress.substring(0,10)}...</span></div>
+                        <div class="mt-1"><b>التوقيع:</b> <span class="text-gray-400">${signature.substring(0, 24)}...</span></div>
+                    `;
+
+                    // Update Balance UI
+                    const balance = await provider.getBalance(userAddress);
+                    document.getElementById('userBalanceText').innerText = parseFloat(ethers.utils.formatEther(balance)).toFixed(3);
+
+                } else {
+                    statusBox.innerHTML = '<span class="text-indigo-400">جاري فتح نافذة جميع المحافظ...</span>';
+                    if (window.modal) {
+                        window.modal.open();
+                    } else {
+                        alert("حدث خطأ أثناء تحميل نافذة المحافظ.");
+                    }
+                }
+            } catch (error) {
+                console.error(error);
+                statusBox.innerHTML = `<span class="text-rose-400 font-semibold">إلغاء أو خطأ: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>
