@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mera X - Direct Connect</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Ethers v5 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+</head>
+<body class="bg-gray-950 text-white min-h-screen flex items-center justify-center p-4">
+
+    <div class="max-w-md w-full bg-gray-900 border border-gray-800 rounded-2xl p-6 text-center space-y-6">
+        <h2 class="text-xl font-bold">منصة Mera X - الربط والتوقيع</h2>
+
+        <!-- زر AppKit الجاهز الذي يفتح قائمة جميع المحافظ دائماً -->
+        <div class="flex justify-center">
+            <w3m-button balance="show" size="md"></w3m-button>
+        </div>
+
+        <button onclick="handleConnect()" class="w-full py-3.5 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold text-sm transition">
+            ربط وتوقيع مباشر
+        </button>
+
+        <div id="statusBox" class="hidden text-xs p-3 bg-gray-950 border border-gray-800 rounded-lg text-right break-all"></div>
+    </div>
+
+    <!-- استدعاء AppKit وتصدير الدالة عالمياً -->
+    <script type="module">
+        import { createAppKit } from 'https://unpkg.com/@reown/appkit@1.0.0/dist/appkit.js'
+        import { mainnet, bsc, polygon } from 'https://unpkg.com/@reown/appkit/networks'
+
+        const projectId = '1dbbf99e77d1e3675cbbb86b24792b5d';
+
+        const metadata = {
+            name: 'Mera X',
+            description: 'Mera X Web3 App',
+            url: window.location.origin || 'https://merax.app',
+            icons: ['https://avatars.githubusercontent.com/u/37784886']
+        }
+
+        // إنشاء الـ Modal
+        const modal = createAppKit({
+            networks: [mainnet, bsc, polygon],
+            metadata: metadata,
+            projectId: projectId,
+            features: {
+                analytics: true
+            }
+        });
+
+        // جعل الكائن متوفراً على مستوى النافذة العامة
+        window.appKitModal = modal;
+    </script>
+
+    <script>
+        async function handleConnect() {
+            const statusBox = document.getElementById('statusBox');
+            statusBox.classList.remove('hidden');
+
+            // إذا كان داخل متصفح المحفظة المدمج (In-App Browser)
+            if (window.ethereum) {
+                statusBox.innerHTML = '<span class="text-blue-400">جاري الاتصال بالمحفظة المدمجة...</span>';
+                try {
+                    const provider = new ethers.providers.Web3Provider(window.ethereum);
+                    const accounts = await provider.send("eth_requestAccounts", []);
+                    const userAddress = accounts[0];
+
+                    const signer = provider.getSigner();
+                    const message = `تأكيد الملكية والتوقيع على Mera X:\nAddress: ${userAddress}\nTime: ${new Date().toISOString()}`;
+                    const signature = await signer.signMessage(message);
+
+                    statusBox.innerHTML = `
+                        <div class="text-emerald-400 font-bold">✓ تم الربط والتوقيع بنجاح!</div>
+                        <div><b>العنوان:</b> ${userAddress}</div>
+                        <div><b>التوقيع:</b> ${signature.substring(0, 20)}...</div>
+                    `;
+                } catch (err) {
+                    statusBox.innerHTML = `<span class="text-rose-400">خطأ: ${err.message}</span>`;
+                }
+            } else {
+                // إذا كان متصفح عادي (Chrome/Safari) -> فتح نافذة WalletConnect مباشرة
+                statusBox.innerHTML = '<span class="text-yellow-400">جاري فتح نافذة جميع المحافظ...</span>';
+                
+                if (window.appKitModal) {
+                    window.appKitModal.open();
+                } else {
+                    statusBox.innerHTML = '<span class="text-rose-400">جاري تحميل مكتبة المحافظ، اعد المحاولة خلال ثوانٍ...</span>';
+                }
+            }
+        }
+    </script>
+</body>
+</html>
