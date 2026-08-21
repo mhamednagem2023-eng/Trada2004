@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trada Platform</title>
+
+  <!-- Ethers.js v6 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+
+  <style>
+    :root {
+      --bg-color: #0d0f12;
+      --card-bg: #16191e;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --text: #ffffff;
+      --text-muted: #9ca3af;
+      --border: #272a30;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    header {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 20px;
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      margin-bottom: 30px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 800px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      margin-bottom: 15px;
+    }
+
+    .info-box {
+      background: #0f1115;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      word-break: break-all;
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="logo"><strong>Trada</strong></div>
+    <div class="controls">
+      <button id="langToggleBtn" onclick="toggleLanguage()" data-i18n="lang_btn">English</button>
+      <button id="connectWalletBtn" onclick="connectWallet()" data-i18n="connect_wallet">ربط المحفظة</button>
+    </div>
+  </header>
+
+  <main class="card">
+    <h2 class="card-title" data-i18n="dashboard_title">لوحة التحكم</h2>
+    
+    <div class="info-box">
+      <span data-i18n="wallet_status">حالة المحفظة:</span> 
+      <strong id="walletAddress" data-i18n="not_connected">غير متصل</strong>
+    </div>
+
+    <div class="info-box">
+      <span data-i18n="network_status">الشبكة:</span> 
+      <strong id="networkName">-</strong>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 15px;">
+      <button onclick="handleTrade()" data-i18n="btn_trade">تداول</button>
+      <button onclick="handleWithdraw()" data-i18n="btn_withdraw">سحب</button>
+    </div>
+  </main>
+
+  <footer>
+    trrada.com 2026
+  </footer>
+
+  <script>
+    // -------------------------------------------------------------
+    // 1. قاموس الترجمة (Translations Dictionary)
+    // -------------------------------------------------------------
+    const translations = {
+      ar: {
+        lang_btn: "English",
+        connect_wallet: "ربط المحفظة",
+        connected: "تم الربط: ",
+        not_connected: "غير متصل",
+        dashboard_title: "لوحة التحكم",
+        wallet_status: "حالة المحفظة:",
+        network_status: "الشبكة:",
+        btn_trade: "تداول",
+        btn_withdraw: "سحب",
+        install_metamask: "يرجى تثبيت محفظة MetaMask أو محفظة Web3 أولاً!",
+        connection_failed: "فشل الاتصال بالمحفظة. حاول مرة أخرى."
+      },
+      en: {
+        lang_btn: "العربية",
+        connect_wallet: "Connect Wallet",
+        connected: "Connected: ",
+        not_connected: "Not Connected",
+        dashboard_title: "Dashboard",
+        wallet_status: "Wallet Status:",
+        network_status: "Network:",
+        btn_trade: "Trade",
+        btn_withdraw: "Withdraw",
+        install_metamask: "Please install MetaMask or a Web3 wallet first!",
+        connection_failed: "Failed to connect wallet. Please try again."
+      }
+    };
+
+    let currentLang = "ar";
+    let userAddress = null;
+
+    // -------------------------------------------------------------
+    // 2. نظام الترجمة الشامل (Translation Engine)
+    // -------------------------------------------------------------
+    function updateLanguage() {
+      // تحديث الاتجاه (RTL / LTR)
+      document.documentElement.dir = currentLang === "ar" ? "rtl" : "ltr";
+      document.documentElement.lang = currentLang;
+
+      // ترجمة جميع العناصر التي تحتوي على data-i18n
+      const elements = document.querySelectorAll("[data-i18n]");
+      elements.forEach(el => {
+        const key = el.getAttribute("data-i18n");
+        if (translations[currentLang][key]) {
+          el.innerText = translations[currentLang][key];
+        }
+      });
+
+      // إعادة رسم عنوان المحفظة إذا كانت متصلة
+      if (userAddress) {
+        document.getElementById("walletAddress").innerText = userAddress;
+      }
+    }
+
+    function toggleLanguage() {
+      currentLang = currentLang === "ar" ? "en" : "ar";
+      updateLanguage();
+    }
+
+    // -------------------------------------------------------------
+    // 3. نظام ربط المحفظة (Ethers.js Wallet Connection)
+    // -------------------------------------------------------------
+    async function connectWallet() {
+      if (typeof window.ethereum === "undefined") {
+        alert(translations[currentLang].install_metamask);
+        return;
+      }
+
+      try {
+        // إنشاء البروفايدر المتوافق مع Ethers v6 و v5
+        let provider;
+        if (typeof ethers.BrowserProvider !== "undefined") {
+          provider = new ethers.BrowserProvider(window.ethereum);
+        } else if (typeof ethers.providers !== "undefined") {
+          provider = new ethers.providers.Web3Provider(window.ethereum);
+        } else {
+          provider = window.ethereum;
+        }
+
+        // طلب الحسابات من المحفظة
+        const accounts = await window.ethereum.request({ method: "eth_requestAccounts" });
+        
+        if (accounts.length > 0) {
+          userAddress = accounts[0];
+          
+          // الحصول على معلومات الشبكة
+          const network = await provider.getNetwork();
+          const networkName = network.name ? network.name : `Chain ID: ${network.chainId}`;
+          document.getElementById("networkName").innerText = networkName;
+
+          // اختصار العنوان للعرض
+          const shortAddress = userAddress.substring(0, 6) + "..." + userAddress.substring(userAddress.length - 4);
+          
+          const walletLabel = document.getElementById("walletAddress");
+          walletLabel.innerText = shortAddress;
+          walletLabel.removeAttribute("data-i18n"); // إزالة الوسم لمنع استبداله بالنص الافتراضي عند الترجمة
+
+          const btn = document.getElementById("connectWalletBtn");
+          btn.innerText = shortAddress;
+          btn.removeAttribute("data-i18n");
+        }
+      } catch (error) {
+        console.error("Wallet connection error:", error);
+        alert(translations[currentLang].connection_failed);
+      }
+    }
+
+    // الاستماع لتغيير الحساب داخل المحفظة
+    if (window.ethereum) {
+      window.ethereum.on("accountsChanged", (accounts) => {
+        if (accounts.length === 0) {
+          location.reload();
+        } else {
+          connectWallet();
+        }
+      });
+
+      window.ethereum.on("chainChanged", () => {
+        window.location.reload();
+      });
+    }
+
+    // إجراءات الأزرار
+    function handleTrade() {
+      console.log("Trade clicked");
+    }
+
+    function handleWithdraw() {
+      console.log("Withdraw clicked");
+    }
+
+    // تشغيل الترجمة عند تحميل الصفحة أول مرة
+    window.addEventListener("DOMContentLoaded", updateLanguage);
+  </script>
+</body>
+</html>
