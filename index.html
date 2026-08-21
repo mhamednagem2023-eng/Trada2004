@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" id="html-root">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>trrada.com | Decentralized Base Matrix</title>
+    <link rel="icon" type="image/png" href="favicon.png" sizes="512x512">
+    <!-- FontAwesome & Google Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js"></script>
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <style>
+        :root {
+            --bg-main: #080b0e;
+            --bg-card: #11171e;
+            --border-color: #1e2630;
+            --text-primary: #ffffff;
+            --text-secondary: #848e9c;
+            --accent-green: #02c076;
+            --accent-green-glow: rgba(2, 192, 118, 0.15);
+            --accent-red: #f84960;
+            --accent-blue: #0052ff;
+            --premium-gradient: linear-gradient(135deg, #11171e 0%, #0d131a 100%);
+            --base-blue: #0052ff;
+            --bg-panel: #1c2030;
+            --text-muted: #848e9c;
+            --green-color: #02c076;
+            --red-color: #f84960;
+            --accent-color: #0052ff;
+
+            --bg-dark: #060911;
+            --card-bg: rgba(15, 23, 42, 0.75);
+            --card-hover: rgba(24, 34, 58, 0.85);
+            --border-color-v2: rgba(255, 255, 255, 0.08);
+            --cyan-glow: #00f0ff;
+            --purple-glow: #8a2be2;
+            --green-glow: #00ff88;
+            --gold-glow: #ffd700;
+            --text-main: #ffffff;
+            --text-sub: #94a3b8;
+            --bot-msg-bg: #1e293b;
+            --user-msg-bg: linear-gradient(135deg, #2563eb, #1d4ed8);
+            --primary-gradient: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', 'Cairo', sans-serif;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            overflow-x: hidden !important;
+            width: 100% !important;
+            max-width: 100vw !important;
+            position: relative;
+            scroll-behavior: smooth;
+        }
+
+        body { 
+            padding-bottom: 80px; 
+            background-image: radial-gradient(circle at top right, rgba(0, 82, 255, 0.03), transparent 400px); 
+        }
+
+        header {
+            background-color: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        .logo-box { display: flex; align-items: center; gap: 8px; }
+        .logo-box i { color: var(--base-blue); font-size: 20px; filter: drop-shadow(0 0 8px rgba(0, 82, 255, 0.4)); }
+        .logo-box span { font-weight: 800; font-size: 18px; letter-spacing: 0.8px; background: linear-gradient(to right, #fff, var(--text-secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .header-actions { display: flex; align-items: center; gap: 6px; }
+        
+        .lang-select-wrapper {
+            position: relative;
+            display: inline-block;
+        }
+
+        .lang-select-dropdown {
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 0 16px 0 6px;
+            height: 32px;
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: all 0.25s ease;
+            text-align: center;
+            min-width: 38px;
+            max-width: 44px;
+        }
+
+        html[dir="rtl"] .lang-select-dropdown {
+            padding: 0 6px 0 16px;
+        }
+
+        .lang-select-dropdown:hover, .lang-select-dropdown:focus {
+            border-color: var(--accent-blue);
+            box-shadow: 0 0 8px rgba(0, 82, 255, 0.3);
+        }
+
+        .lang-select-dropdown option {
+            background-color: var(--bg-card);
+            color: var(--text-primary);
+            padding: 8px;
+            font-size: 12px;
+        }
+
+        .lang-select-arrow {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            font-size: 8px;
+            color: var(--text-secondary);
+        }
+
+        html[dir="rtl"] .lang-select-arrow {
+            right: auto;
+            left: 5px;
+        }
+
+        .btn-action-nav {
+            background-color: var(--bg-main);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 6px 12px;
+            height: 32px;
+            border-radius: 8px;
+            font-size: 11px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+            white-space: nowrap;
+        }
+
+        .btn-action-nav:hover { border-color: var(--base-blue); }
+        .btn-action-nav.connected-wallet {
+            border-color: var(--accent-red);
+            color: #ffffff;
+            background: rgba(248, 73, 96, 0.2);
+            box-shadow: 0 0 10px rgba(248, 73, 96, 0.25);
+        }
+        
+        .page-section { display: none; padding: 16px 0; max-width: 100%; margin: 0 auto; }
+        .page-section.active { display: block; }
+
+        .empty-section-holder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 50vh;
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 20px;
+        }
+        .empty-section-holder i {
+            font-size: 40px;
+            margin-bottom: 12px;
+            color: var(--cyan-glow);
+        }
+
+        .nav-bar-footer {
+            position: fixed; bottom: 0; left: 0; right: 0; background-color: var(--bg-card);
+            border-top: 1px solid var(--border-color); display: flex; height: 65px; z-index: 1000;
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.4);
+        }
+
+        .tab-btn {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            color: var(--text-secondary); cursor: pointer; gap: 3px; transition: all 0.2s ease;
+        }
+
+        .tab-btn i { font-size: 18px; }
+        .tab-btn span { font-size: 10px; font-weight: 600; text-align: center; }
+        .tab-btn.active { color: var(--accent-green); filter: drop-shadow(0 0 4px rgba(2, 192, 118, 0.2)); }
+        
+        #global-entry-loader {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(8, 11, 14, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        .spinner-ring {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(0, 82, 255, 0.15);
+            border-top: 4px solid var(--accent-blue);
+            border-right: 4px solid var(--accent-green);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+            box-shadow: 0 0 15px rgba(0, 82, 255, 0.3);
+        }
+
+        #ui-status-notifier {
+            display: none; padding: 12px; border-radius: 10px; font-size: 13px; 
+            margin-bottom: 14px; text-align: center; font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .status-error { background: rgba(248, 73, 96, 0.15); border: 1px solid var(--accent-red); color: #ff6b7e; }
+        .status-success { background: rgba(2, 192, 118, 0.15); border: 1px solid var(--accent-green); color: #63ffc4; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .glow-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
+            background: 
+                radial-gradient(circle at 15% 15%, rgba(138, 43, 226, 0.15) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(0, 240, 255, 0.12) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(0, 255, 136, 0.05) 0%, transparent 60%);
+        }
+
+        .hero {
+            padding: 40px 5% 30px;
+            text-align: center;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 18px;
+            background: rgba(0, 240, 255, 0.08);
+            border: 1px solid rgba(0, 240, 255, 0.25);
+            border-radius: 30px;
+            color: var(--cyan-glow);
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+        }
+
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 900;
+            line-height: 1.3;
+            margin-bottom: 20px;
+        }
+
+        .hero h1 span {
+            background: linear-gradient(90deg, var(--cyan-glow), #3b82f6, var(--purple-glow));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.05rem;
+            color: var(--text-sub);
+            max-width: 750px;
+            margin: 0 auto;
+            line-height: 1.8;
+        }
+
+        .channels-top-section {
+            padding: 10px 5% 30px;
+        }
+
+        .channels-box {
+            background: linear-gradient(135deg, rgba(138, 43, 226, 0.2), rgba(0, 240, 255, 0.1));
+            border: 1px solid rgba(0, 240, 255, 0.3);
+            border-radius: 20px;
+            padding: 25px 20px;
+            text-align: center;
+            max-width: 850px;
+            margin: 0 auto;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .channels-btns {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .channel-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 28px;
+            border-radius: 30px;
+            background: #229ed9;
+            color: #fff;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(34, 158, 217, 0.3);
+        }
+
+        .channel-btn.group-btn {
+            background: #10b981;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .channel-btn:hover {
+            transform: translateY(-3px);
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="global-entry-loader">
+        <div class="spinner-ring"></div>
+        <p style="font-size:13px; color:#fff; font-weight:700;" data-i18n="fetchingData">Fetching Live Blockchain Data...</p>
+    </div>
+
+    <header>
+        <div class="logo-box">
+            <i class="fa-solid fa-cubes"></i>
+            <span>trrada.com</span>
+        </div>
+        <div class="header-actions">
+            <div class="lang-select-wrapper">
+                <select class="lang-select-dropdown" id="country-lang-selector" onchange="handleCountryChange(this.value)">
+                </select>
+                <i class="fa-solid fa-chevron-down lang-select-arrow"></i>
+            </div>
+            
+            <button class="btn-action-nav" id="btn-wallet-connect" onclick="handleWalletConnectionTrigger()">
+                <i class="fa-solid fa-wallet"></i> <span data-i18n="connectWallet">Connect Wallet</span>
+            </button>
+        </div>
+    </header>
+
+    <div style="max-width:480px; margin: 12px auto 0 auto; padding: 0 16px;">
+        <div id="ui-status-notifier"></div>
+    </div>
+
+    <!-- SECTIONS -->
+    <!-- 0. قسم المشروع الرئيسي -->
+    <section class="page-section active" id="section-about">
+        <div class="glow-bg"></div>
+        <section class="hero">
+            <div class="badge">
+                <i class="fa-solid fa-shield-halved"></i> بروتوكول لامركزي آمن 100% بدون سيرفر أو بروكسي
+            </div>
+            <h1>مستقبل الاستثمار والتداول مع <span>trrada.com</span></h1>
+            <p>منصة لامركزية دائمية تعتمد على الذكاء المالي والعقود الذكية على شبكة BSC.</p>
+        </section>
+        
+        <section class="channels-top-section" id="channels">
+            <div class="channels-box">
+                <h2 style="font-size: 1.5rem; margin-bottom: 8px;">انضم لمجتمعات <span style="color: var(--cyan-glow);">trrada.com</span> الرسمية</h2>
+                <div class="channels-btns">
+                    <a href="https://t.me/Trada2035" target="_blank" class="channel-btn">
+                        <i class="fa-brands fa-telegram"></i> القناة الرسمية
+                    </a>
+                    <a href="https://t.me/Trada2036" target="_blank" class="channel-btn group-btn">
+                        <i class="fa-brands fa-telegram"></i> مجتمع المناقشات
+                    </a>
+                </div>
+            </div>
+        </section>
+    </section>
+
+    <!-- 1. قسم الاستثمار (مستدعى تلقائياً من invest.html) -->
+    <section class="page-section" id="section-invest">
+        <div class="empty-section-holder">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <p>جاري تحميل قسم الاستثمار...</p>
+        </div>
+    </section>
+
+    <!-- 2. قسم التداول (مستدعى تلقائياً من trade.html) -->
+    <section class="page-section" id="section-trade">
+        <div class="empty-section-holder">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <p>جاري تحميل قسم التداول...</p>
+        </div>
+    </section>
+
+    <!-- 3. قسم الأجيال / الفريق (مستدعى تلقائياً من team.html) -->
+    <section class="page-section" id="section-team">
+        <div class="empty-section-holder">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <p>جاري تحميل قسم الأجيال...</p>
+        </div>
+    </section>
+
+    <!-- 4. قسم منظمة DAO (مستدعى تلقائياً من dao.html) -->
+    <section class="page-section" id="section-dao">
+        <div class="empty-section-holder">
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <p>جاري تحميل قسم DAO...</p>
+        </div>
+    </section>
+
+    <!-- NAVIGATION FOOTER -->
+    <nav class="nav-bar-footer">
+        <div class="tab-btn active" id="nav-item-about" onclick="switchTab('about')">
+            <i class="fa-solid fa-house"></i>
+            <span data-i18n="navProject">المشروع</span>
+        </div>
+        <div class="tab-btn" id="nav-item-invest" onclick="switchTab('invest')">
+            <i class="fa-solid fa-vault"></i>
+            <span data-i18n="navInvest">Invest</span>
+        </div>
+        <div class="tab-btn" id="nav-item-trade" onclick="switchTab('trade')">
+            <i class="fa-solid fa-chart-line"></i>
+            <span data-i18n="navTrade">Trade</span>
+        </div>
+        <div class="tab-btn" id="nav-item-team" onclick="switchTab('team')">
+            <i class="fa-solid fa-users"></i>
+            <span data-i18n="navGenerations">Generations</span>
+        </div>
+        <div class="tab-btn" id="nav-item-dao" onclick="switchTab('dao')">
+            <i class="fa-solid fa-landmark"></i>
+            <span data-i18n="navDao">DAO Org</span>
+        </div>
+    </nav>
+
+    <script>
+        const countryLanguages = [
+            { code: "en", name: "USA", flag: "🇺🇸", dir: "ltr" },
+            { code: "ar", name: "Saudi Arabia", flag: "🇸🇦", dir: "rtl" }
+        ];
+
+        const i18nDictionary = {
+            en: { connectWallet: "Connect Wallet", navProject: "Project", navInvest: "Invest", navTrade: "Trade", navGenerations: "Generations", navDao: "DAO Org", fetchingData: "Fetching Live Blockchain Data..." },
+            ar: { connectWallet: "ربط المحفظة", navProject: "المشروع", navInvest: "الاستثمار", navTrade: "التداول", navGenerations: "الأجيال", navDao: "منظمة DAO", fetchingData: "جاري جلب بيانات البلوكشين..." }
+        };
+
+        const sectionFiles = {
+            invest: "invest.html",
+            trade: "trade.html",
+            team: "team.html",
+            dao: "dao.html"
+        };
+
+        let sessionState = {
+            currentLang: "en",
+            walletConnected: false, 
+            walletAddress: null
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            renderCountryOptions();
+            triggerGlobalDataFetchLoader();
+            loadAllExternalSections();
+        });
+
+        // آلية استدعاء وجلب محتويات الملفات المرفوعة على GitHub تلقائياً
+        async function loadExternalSection(sectionId, fileName) {
+            const container = document.getElementById(`section-${sectionId}`);
+            if (!container) return;
+
+            try {
+                const response = await fetch(fileName);
+                if (response.ok) {
+                    const htmlContent = await response.text();
+                    container.innerHTML = htmlContent;
+                    executeScriptsInContainer(container);
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-section-holder">
+                            <i class="fa-solid fa-folder-open"></i>
+                            <p>قسم (${fileName}) غير مرفوع حالياً في المستودع.</p>
+                        </div>`;
+                }
+            } catch (error) {
+                container.innerHTML = `
+                    <div class="empty-section-holder">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <p>في انتظار رفع ملف (${fileName}) على المستودع...</p>
+                    </div>`;
+            }
+        }
+
+        function loadAllExternalSections() {
+            Object.keys(sectionFiles).forEach(key => {
+                loadExternalSection(key, sectionFiles[key]);
+            });
+        }
+
+        function executeScriptsInContainer(container) {
+            const scripts = container.querySelectorAll("script");
+            scripts.forEach(oldScript => {
+                const newScript = document.createElement("script");
+                Array.from(oldScript.attributes).forEach(attr => newScript.setAttribute(attr.name, attr.value));
+                newScript.appendChild(document.createTextNode(oldScript.innerHTML));
+                oldScript.parentNode.replaceChild(newScript, oldScript);
+            });
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+            const targetSection = document.getElementById(`section-${tabId}`);
+            const targetNav = document.getElementById(`nav-item-${tabId}`);
+
+            if (targetSection) targetSection.classList.add('active');
+            if (targetNav) targetNav.classList.add('active');
+        }
+
+        function renderCountryOptions(selectedCode = "en") {
+            const selectEl = document.getElementById('country-lang-selector');
+            if(!selectEl) return;
+            selectEl.innerHTML = '';
+            countryLanguages.forEach((item) => {
+                const opt = document.createElement('option');
+                opt.value = item.code;
+                opt.textContent = `${item.flag} ${item.name}`;
+                selectEl.appendChild(opt);
+            });
+            selectEl.value = selectedCode;
+        }
+
+        function triggerGlobalDataFetchLoader(durationMs = 1200) {
+            const loader = document.getElementById('global-entry-loader');
+            if(!loader) return;
+            loader.style.opacity = '1';
+            loader.style.visibility = 'visible';
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                loader.style.visibility = 'hidden';
+            }, durationMs);
+        }
+
+        function handleCountryChange(selectedCode) {
+            const targetLang = countryLanguages.find(c => c.code === selectedCode) || countryLanguages[0];
+            sessionState.currentLang = targetLang.code;
+            const rootHtml = document.getElementById('html-root');
+            rootHtml.setAttribute('dir', targetLang.dir);
+            rootHtml.setAttribute('lang', targetLang.code);
+        }
+
+        async function handleWalletConnectionTrigger() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    sessionState.walletConnected = true;
+                    sessionState.walletAddress = accounts[0];
+                    const btn = document.getElementById('btn-wallet-connect');
+                    const truncated = accounts[0].substring(0, 6) + '...' + accounts[0].substring(accounts[0].length - 4);
+                    btn.innerHTML = `<i class="fa-solid fa-link"></i> <span>${truncated}</span>`;
+                    btn.classList.add('connected-wallet');
+                } catch (e) {
+                    console.error(e);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
